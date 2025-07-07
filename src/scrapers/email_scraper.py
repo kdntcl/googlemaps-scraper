@@ -115,13 +115,7 @@ async def find_emails_on_site(crawler: AsyncWebCrawler, empresa_id: int, base_ur
 
     return all_emails
 
-def check_memory_and_pause(threshold=90.0, pause_duration=30):
-    """Verifica el uso de memoria y pausa si supera un umbral."""
-    memory_usage = psutil.virtual_memory().percent
-    if memory_usage > threshold:
-        logging.warning(f"Uso de memoria ({memory_usage:.2f}%) supera el umbral de {threshold}%. Pausando por {pause_duration} segundos.")
-        time.sleep(pause_duration)
-        logging.info("Reanudando el proceso después de la pausa.")
+
 
 def get_empresas_pendientes_de_scrapeo():
     """Obtiene empresas cuyo estado de scraping es 'pendiente'."""
@@ -182,7 +176,7 @@ async def main():
     empresas = get_empresas_pendientes_de_scrapeo()
     
     # --- Lógica de Chunks y Monitoreo ---
-    chunk_size = 5  # Procesar de 5 en 5 para no saturar la memoria con deep crawl
+    chunk_size = 50 # Procesar de 50 en 50 para acelerar el proceso
     total_empresas = len(empresas)
     logging.info(f"Se procesarán {total_empresas} empresas en lotes de {chunk_size}.")
 
@@ -199,7 +193,7 @@ async def main():
             chunk = empresas[i:i + chunk_size]
             logging.info(f"--- Procesando Lote {i//chunk_size + 1}/{(total_empresas + chunk_size - 1)//chunk_size} (Empresas {i+1}-{min(i+chunk_size, total_empresas)}) ---")
             
-            check_memory_and_pause()
+
 
             for empresa_id, website_from_db in chunk:
                 website = normalize_url(website_from_db)

@@ -114,6 +114,34 @@ python src/scrapers/email_scraper.py
 
 ---
 
+## Flujo de Trabajo Alternativo: Scraping de Servicios de Salud
+
+Este proyecto incluye un flujo de trabajo secundario y especializado para recopilar información de contacto de centros de salud públicos (CESFAM, Postas, etc.) y Direcciones de Administración de Salud (DAS) municipales. Este proceso es útil para campañas de contacto profesional o postulaciones.
+
+**Paso 1: Preparar la Lista de Búsqueda**
+
+El scraper se alimenta de un archivo CSV con una lista predefinida de establecimientos. Asegúrate de que este archivo exista y tenga el formato correcto:
+
+-   **Ubicación:** `data/raw/salud_publica/centros_salud_ssc.csv`
+-   **Columnas requeridas:** `nombre`, `comuna`
+
+**Paso 2: Ejecutar el Scraper de Salud**
+
+Este comando utiliza el archivo CSV para generar búsquedas precisas en Google Maps, añadiendo automáticamente la región para evitar ambigüedades.
+
+```bash
+# Desde la raíz del proyecto
+python src/scrapers/run_google_maps_salud.py
+```
+
+Los resultados se guardan en un archivo CSV independiente para no mezclarse con la base de datos de empresas:
+
+-   **Archivo de salida:** `data/exports/google_maps_salud/google_maps_salud_results.csv`
+
+Este flujo no interactúa con la base de datos SQLite principal y está diseñado para una recolección de datos rápida y específica.
+
+---
+
 ## Estrategia de Búsqueda
 
 Toda la estrategia de búsqueda (qué y dónde buscar) se controla desde un único archivo:

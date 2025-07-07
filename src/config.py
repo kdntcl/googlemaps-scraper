@@ -74,18 +74,15 @@ OUTPUT_DIR_BASE = os.path.join(PROJECT_ROOT, 'data')
 ACTIVE_CATEGORIES = [
     # Retail y Servicios con alto personal
 
-    "Tienda por departamento",
     "Centro comercial",
     "Gimnasio",
     "Centro deportivo",
     "Hotel",
     "Notaría",
-    "Banco",
     "Ferretería",
     "Automotora",
     "Tienda de electrónica",
     "Librería",
-    "Cine",
     
     # Oficinas y Empresas
     "Empresa de construcción",

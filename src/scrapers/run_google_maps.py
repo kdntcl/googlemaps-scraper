@@ -22,6 +22,8 @@ VENV_PYTHON = os.path.join(SCRAPER_VENDOR_DIR, '.venv', 'bin', 'python')
 SCRAPER_MAIN_SCRIPT = os.path.join(SCRAPER_VENDOR_DIR, 'main.py')
 OUTPUT_DIR = os.path.join(PROJECT_ROOT, 'data', 'raw', 'google_maps')
 TOTAL_RESULTS_PER_QUERY = 200  # Number of results to scrape per query
+MEMORY_THRESHOLD_MB = 2048  # Pause if memory exceeds 2GB
+PAUSE_ON_HIGH_MEMORY_S = 30  # Pause duration in seconds on high memory
 
 def generate_search_queries():
     """
@@ -108,8 +110,8 @@ def run_google_maps_scraper(queries, chunk_size=50, pause_between_chunks=10):
 
         if (i + 1) < num_chunks:
             if mem_usage > MEMORY_THRESHOLD_MB:
-                logging.warning(f"Memory usage ({mem_usage:.2f} MB) exceeded threshold ({MEMORY_THRESHOLD_MB} MB). Pausing for 30 seconds.")
-                time.sleep(30)
+                logging.warning(f"Memory usage ({mem_usage:.2f} MB) exceeded threshold ({MEMORY_THRESHOLD_MB} MB). Pausing for {PAUSE_ON_HIGH_MEMORY_S} seconds.")
+                time.sleep(PAUSE_ON_HIGH_MEMORY_S)
             else:
                 logging.info(f"Pausing for {pause_between_chunks} seconds before next chunk...")
                 time.sleep(pause_between_chunks)

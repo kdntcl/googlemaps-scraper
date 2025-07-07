@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(PROJECT_ROOT)
 
-from src.config import DB_PATH
+from src.config import DB_PATH, ACTIVE_LOCATIONS
 
 # Rutas de archivos
 INPUT_CSV_PATH = os.path.join(PROJECT_ROOT, 'data', 'raw', 'google_maps', 'google_maps_results.csv')
@@ -63,6 +63,33 @@ def create_db_schema(cursor):
     logging.info("Esquema de la base de datos verificado/creado exitosamente.")
 
 # --- Funciones de Limpieza ---
+def is_valid_location(address, valid_locations):
+    """
+    Valida si una dirección pertenece a la región del Biobío y a una de las
+    ubicaciones activas definidas en la configuración.
+    La validación no es sensible a mayúsculas/minúsculas.
+
+    Args:
+        address (str): La dirección a validar.
+        valid_locations (list): La lista de comunas y sectores válidos.
+
+    Returns:
+        bool: True si la ubicación es válida, False en caso contrario.
+    """
+    if not isinstance(address, str):
+        return False
+
+    address_lower = address.lower()
+    
+    # Condición 1: Debe contener alguna variación de "Biobío"
+    # Se añade "bío bío" con espacio para corregir el bug de detección.
+    in_region = any(term in address_lower for term in ['biobío', 'bío-bío', 'bio-bio', 'bío bío'])
+    
+    # Condición 2: Debe contener una de las ubicaciones activas
+    in_location = any(loc.lower() in address_lower for loc in valid_locations)
+    
+    return in_region and in_location
+
 def clean_phone_number(phone):
     """Limpia y estandariza los números de teléfono."""
     if not isinstance(phone, str):
@@ -108,11 +135,20 @@ def main():
     empresas_agregadas = 0
     telefonos_agregados = 0
     webs_agregadas = 0
+    empresas_descartadas = 0
 
     for _, row in df.iterrows():
         nombre_empresa = row.get('nombre')
+        direccion = row.get('direccion')
+
         # Robust check for missing or empty names (handles NaN, None, and empty strings)
         if pd.isna(nombre_empresa) or not str(nombre_empresa).strip():
+            continue
+
+        # Validar geográficamente antes de procesar
+        if not is_valid_location(direccion, ACTIVE_LOCATIONS):
+            logging.debug(f"Empresa '{nombre_empresa}' descartada por ubicación no válida: {direccion}")
+            empresas_descartadas += 1
             continue
 
         # 1. Verificar si la empresa ya existe (por nombre)
@@ -153,6 +189,7 @@ def main():
 
     logging.info("--- Proceso de integración finalizado ---")
     logging.info(f"Nuevas empresas agregadas: {empresas_agregadas}")
+    logging.info(f"Empresas descartadas por ubicación: {empresas_descartadas}")
     logging.info(f"Nuevos teléfonos agregados: {telefonos_agregados}")
     logging.info(f"Nuevas webs agregadas: {webs_agregadas}")
 
